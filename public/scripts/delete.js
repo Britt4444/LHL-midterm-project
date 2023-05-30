@@ -16,8 +16,8 @@ $(document).ready(function() {
     return "";
   }
 
-  
-  let userId = parseInt(getCookie("user_id")); 
+
+  let userId = parseInt(getCookie("user_id"));
 console.log("user_id", userId)
   // Fetch user's created events
   $.ajax({

@@ -27,7 +27,6 @@ const addEvent = function(event) {
     .catch((err) => console.log(err.message));
 };
 
-
 const deleteEvent = (eventId) => {
   return db.query('DELETE FROM music_events WHERE id = $1', [eventId])
     .then(() => {
