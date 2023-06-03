@@ -19,6 +19,7 @@ nav.navbar {
 
   h2:hover {
     color: white;
+    font-size: 2.25em;
   }
 
   .nav-wrapper {
@@ -26,13 +27,21 @@ nav.navbar {
     align-items: center;
 
     a.nav-link {
-      text-align: end;
       color: white;
       font-size: larger;
+      font-weight: bold;
+      outline: 0;
+      margin-left: -1.5em;
+      color: transparent;
+      -webkit-background-clip: text;
+      background-image: rgb(134, 40, 144);
+      background-image: linear-gradient(0deg, rgba(134, 40, 144, 1) 10%, rgba(210, 71, 225, 1) 60%);
+      background-clip: text;
     }
 
     a.nav-link:hover {
       text-decoration: underline;
+      outline: 0;
     }
 
     div.logged-in {
@@ -45,9 +54,10 @@ nav.navbar {
     }
 
     .login {
+      outline: 0;
       background: none;
       border: none;
-      padding: 0;
+      margin: 0.34em;
       cursor: pointer;
       color: white;
       display: flex;
@@ -56,13 +66,14 @@ nav.navbar {
 
     .login:hover {
       text-decoration: underline;
+      outline: 0;
     }
 
-    .logout {
+    .log-out button#click-out {
+      outline: 0;
       background: none;
       border: none;
       padding: 0;
-      padding-top: 5em;
       cursor: pointer;
       color: white;
       display: flex;

@@ -83,9 +83,7 @@ router.post('/favourite', (req, res) => {
     });
 });
 
-
 // edit user-created event
-//eventId IN MINE?????????????????????
 router.post('/:event_id', (req, res) => {
   const userId = req.cookies.user_id;
   const eventId = req.params.event_id;
@@ -108,8 +106,8 @@ router.post('/:event_id', (req, res) => {
 });
 
 // delete user-created event
-router.delete('/:eventId', (req, res) => {
-  const eventId = req.params.eventId;
+router.delete('/:event_id', (req, res) => {
+  const eventId = req.params.event_id;
 
   eventQueries.deleteEvent(eventId)
     .then(() => {
@@ -121,9 +119,9 @@ router.delete('/:eventId', (req, res) => {
 });
 
 // DELETE FROM FAVOURITE EVNETS
-router.delete('/favourites/:eventId', (req, res) => {
+router.delete('/favourites/:event_id', (req, res) => {
   const userId = req.cookies.user_id;
-  const eventId = req.params.eventId;
+  const eventId = req.params.event_id;
 
   eventQueries.deleteFavouriteEvents(userId, eventId)
     .then(() => {

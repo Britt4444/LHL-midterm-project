@@ -12,6 +12,7 @@ router.get('/:user_id', (req, res) => {
   res.redirect('/');
 });
 
+// get user name
 router.get('/name/:user_id', (req, res) => {
   let userId = req.params.user_id;
   eventQueries
@@ -20,11 +21,5 @@ router.get('/name/:user_id', (req, res) => {
       res.json({ userName });
     });
 });
-
-// //logout
-// router.post('/logout', (req, res) => {
-//   res.clearCookie();
-//   res.redirect('/');
-// });
 
 module.exports = router;

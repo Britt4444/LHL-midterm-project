@@ -1,5 +1,5 @@
-// Client facing scripts here
-//global object to store created marker, need for deleting them
+
+//global object to store created marker, needed for deleting events from map
 const markers = {};
 
 
@@ -20,37 +20,23 @@ const getCookie = (cname) => {
   return "";
 };
 
-
 $(document).ready(() => {
   const markersMax = 2000;
-  // old code to show openmaps tile map
-  // L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  //   attribution: '&copy; <a href="https://osm.org/copyright%22%3EOpenStreetMap</a> contributors'
-  // }).addTo(map);
-
 
   // openstreetmaps map
   const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://osm.org/copyright%22%3EOpenStreetMap</a> contributors'
   });
 
-
-  // we need to confirm terms of use for the google stuff
   // google streets map
   const googleStreets = L.tileLayer('http://{s}.google.com/vt?lyrs=m&x={x}&y={y}&z={z}', {
     subdomains: ['mt0', 'mt1', 'mt2', 'mt3']
   });
 
-
   // google hybrid map
   const googleHybrid = L.tileLayer('http://{s}.google.com/vt?lyrs=s,h&x={x}&y={y}&z={z}', {
     subdomains: ['mt0', 'mt1', 'mt2', 'mt3']
   });
-
-
-  // old code defining map and where it is centered
-  // let map = L.map('map').setView([52.268112, -113.811241], 5);
-
 
   // implement layers control
   let map = L.map('map', {
@@ -58,9 +44,11 @@ $(document).ready(() => {
     zoom: 5,
     layers: [osm]
   });
+
   //create layers for all events and created events
   const allEventsLayerGroup = L.layerGroup().addTo(map);
   const createdEventsLayerGroup = L.layerGroup().addTo(map);
+
   // base layers we want to switch between in layers control
   const baseMaps = {
     "OpenStreetMap": osm,
@@ -72,7 +60,7 @@ $(document).ready(() => {
     "My events": createdEventsLayerGroup
   };
 
-
+  //custom all events icon
   const allEventsIcon = L.icon({
     iconUrl: '../icons/musicPurple.png',
     iconSize: [65, 60],
@@ -80,7 +68,7 @@ $(document).ready(() => {
     popupAnchor: [0, -60]
   });
 
-
+  //custom my events icon
   const createdIcon = L.icon({
     iconUrl: '../icons/musicBlue.png',
     iconSize: [65, 60],
@@ -88,15 +76,8 @@ $(document).ready(() => {
     popupAnchor: [0, -60]
   });
 
-  let userId = parseInt(getCookie("user_id"));
-  if(userId) {
-    $('.container-dropdowns').show();
-  }
-
-
   // display layers control and make it always visible in the top right corner, we can filter from here
   const layerControl = L.control.layers(baseMaps, overlayMaps, { collapsed: false }).addTo(map);
-
 
   //display leaflet-geosearch on map to search for events by city
   const provider = new window.GeoSearch.OpenStreetMapProvider();
@@ -106,14 +87,18 @@ $(document).ready(() => {
     updateMap: true,
     autoClose: true,
   });
+
   map.addControl(search);
-
   let markersGroup = L.layerGroup();
-
   map.addLayer(markersGroup);
 
-  const renderMarkers = function (events, isCreatedByCurrentUser) {
+  // hide dropdowns if not logged in
+  let userId = parseInt(getCookie("user_id"));
+  if (userId) {
+    $('.container-dropdowns').show();
+  };
 
+  const renderMarkers = function (events, isCreatedByCurrentUser) {
     // helper function that determines if a date is before current date
     const isInThePast = function (date) {
       const today = new Date().toISOString().slice(0, 10);
@@ -123,6 +108,7 @@ $(document).ready(() => {
       }
       return false;
     };
+
     for (const event of events) {
       // if event.end_date is before today's date, don't display the event
       if (!isInThePast(event.end_date)) {
@@ -135,7 +121,7 @@ $(document).ready(() => {
         //add marker to markers object with event id as a key, need to handle deliting them
         markers[event.id] = marker;
 
-        //event.music_event_id is for checking favourite
+        //set popup content
         const popupContent = `
         <div class="favourite-icon ${event.music_event_id ? 'favourited' : ''}" id=${event.id}>
         <i class="fa fa-heart"></i>
@@ -144,6 +130,7 @@ $(document).ready(() => {
         <h3><b>${event.name}</b></h3><p>${dayjs(event.start_date).format('MMMM D, YYYY')}</p>
         <p>${event.description}<p id="collapsible"><strong>. . .</strong></p>
         `;
+        //set collapsible popup content
         const popupExpansion = `
         <div id="expand">
           <p><b>Venue:</b> ${event.venue}<br><b>City:</b> ${event.city}<br>
@@ -153,8 +140,7 @@ $(document).ready(() => {
         </div>
         `;
 
-
-        // this won't work twice in a row ?
+        // handle click of ... to expand popup
         const onPopupOpen = function () {
           $('#collapsible').click(function (e) {
             if ($('#expand').is(':visible')) {
@@ -167,7 +153,6 @@ $(document).ready(() => {
         marker.bindPopup(popupContent + popupExpansion);
         marker.on('popupopen', onPopupOpen);
 
-
         // bounds.extend([event.latitude, event.longitude]);
         if (isCreatedByCurrentUser) {
           createdEventsLayerGroup.addLayer(marker);
@@ -177,11 +162,9 @@ $(document).ready(() => {
       }
     }
 
-
-    // fit map to bounds
-    // map.fitBounds(bounds);
-    // console.log("markersLength", Object.keys(markers).length);
   };
+
+  // get all events
   const loadEvents = function () {
     $.ajax({
       url: '/api/events',
@@ -195,13 +178,13 @@ $(document).ready(() => {
     });
   };
 
-  // display Name when logged in
+  // get user name when logged in
   const displayName = function (userId) {
     if (!userId) return;
     $.ajax({
       url: `/login/name/` + userId,
       method: 'GET',
-      success: function(data) {
+      success: function (data) {
         let name = data.userName[0]['name'];
         // show logged-in
         $('.logged-in').show();
@@ -218,7 +201,7 @@ $(document).ready(() => {
 
   displayName(userId);
 
-
+  //get events created by user
   const loadCreatedEvents = function (userId) {
     if (!userId) return;
     $.ajax({
@@ -235,12 +218,6 @@ $(document).ready(() => {
 
   loadEvents();
   loadCreatedEvents(userId);
-
-  // if not logged in, remove my events/favourites function
-  if(!userId) {
-
-  };
-
 
   //move marker var outside of event listener
   let marker;
@@ -260,7 +237,6 @@ $(document).ready(() => {
     function onPopupOpen() {
       let tempMarker = this;
 
-
       // To remove marker on click of delete button in the popup of marker
       $('.marker-delete-button:visible').click(function () {
         map.removeLayer(tempMarker);
@@ -268,6 +244,7 @@ $(document).ready(() => {
           $('.add-event-section').slideToggle();
         };
       });
+
       // to toggle add event form on click of add button in popup
       $('.marker-submit-button:visible').click(function () {
         $('.add-event-section').slideToggle();
@@ -282,6 +259,7 @@ $(document).ready(() => {
         }
       });
     };
+
     //CUSTOM ICON
     const markerOptions = {
       icon: createdIcon
@@ -390,7 +368,7 @@ $(document).ready(() => {
     $.ajax({
       url: `/api/events/favourite/${userId}`,
       method: 'GET',
-      success: function(response) {
+      success: function (response) {
         let favouriteEvents = response.favouriteEvents;
         let dropdownMenu = $('#favourite-events');
 
@@ -399,7 +377,7 @@ $(document).ready(() => {
           // Clear the dropdown menu
           dropdownMenu.empty();
           // Iterate over each favourite event and create dropdown items
-          favouriteEvents.forEach(function(event) {
+          favouriteEvents.forEach(function (event) {
 
             $(`[id="${event.id}"] i`).addClass('favourited');
             let eventItem = $('<a class="dropdown-item" href="#">')
@@ -418,7 +396,7 @@ $(document).ready(() => {
           dropdownMenu.html('<span class="dropdown-item">No favourite events found</span>');
         }
       },
-      error: function(xhr, status, error) {
+      error: function (xhr, status, error) {
         // Handle the error response
         console.error('Error fetching favourite events:', error);
       }
@@ -431,11 +409,11 @@ $(document).ready(() => {
       url: '/api/events/favourite',
       method: 'POST',
       data: { userId, eventId },
-      success: function(response) {
+      success: function (response) {
 
         return response;
       },
-      error: function(xhr, status, error) {
+      error: function (xhr, status, error) {
         throw error;
       }
     });
@@ -446,14 +424,12 @@ $(document).ready(() => {
     return $.ajax({
       url: `/api/events/favourites/${eventId}`,
       method: 'DELETE',
-      success: function(response) {
+      success: function (response) {
 
-
-
-        // Reload the favourite events dropdown or update the UI accordingly
+        // Reload the favourite events dropdown
         fetchFavouriteEvents(userId);
       },
-      error: function(xhr, status, error) {
+      error: function (xhr, status, error) {
         // Handle the error response
         console.error('Error removing event from favourites:', error);
       }
@@ -461,12 +437,11 @@ $(document).ready(() => {
   };
 
   //HANDLE CLICK ON REMOVE FAV BUTTON
-  $(document).on('click', '.remove-favourite-event', function() {
+  $(document).on('click', '.remove-favourite-event', function () {
     // Get the event ID from the data attribute
     const eventId = $(this).attr("id");
 
-
-    // Call a function to remove the event from favourites
+    // Call function to remove the event from favourites
     removeFavouriteEvent(userId, eventId)
       .then(() => {
         fetchFavouriteEvents(userId);
@@ -474,7 +449,8 @@ $(document).ready(() => {
 
   });
 
-  $(document).on('click', '.favourite-icon', function() {
+  // on clicking heart icon
+  $(document).on('click', '.favourite-icon', function () {
     const eventId = $(this).attr("id");
 
     const heartIcon = $(this);
@@ -527,16 +503,19 @@ $(document).ready(() => {
 
   $('.edit-event-section').hide();
 
-  // EDIT events
+  // EDIT events on click of edit in dropdown
   $(document).on('click', '.edit-event', function (e) {
     e.preventDefault();
-    //show form
+
+    //show edit form
     $('.edit-event-section').slideToggle();
     $('#edit-name').focus();
+
     //access event to prepopulate form fields
     let eventItem = $(this).closest('.dropdown-item');
     let event = eventItem.data('event');
-    // convert store date to proper format
+
+    // convert stored date to proper format
     let startDate = dayjs(event.start_date).format('YYYY-MM-DD');
     let endDate = dayjs(event.end_date).format('YYYY-MM-DD');
 
@@ -550,7 +529,7 @@ $(document).ready(() => {
     $('#edit-latitude').val(event.latitude);
     $('#edit-longitude').val(event.longitude);
     $('#edit-event-link').val(event.event_link_url);
-    $('#edit-event-thumbnail').val(event.event_thumbnail_url); // this isn't filling ??
+    $('#edit-event-thumbnail').val(event.event_thumbnail_url);
 
     // to clear and close form when 'cancel' button is clicked
     $('.cancel-edit').click(function () {
@@ -559,7 +538,8 @@ $(document).ready(() => {
         $('.edit-event-section').hide(500);
       };
     });
-    //when edit event button is clicked
+
+    //when edit event button is clicked/form submitted
     $('#edit-event-form').on('submit', function (e) {
       console.log('Button clicked, performing ajax call...');
       e.preventDefault();
@@ -590,7 +570,8 @@ $(document).ready(() => {
       });
     });
   });
-  // Handle DETELE event click
+
+  // Handle Delete event click
   $(document).on('click', '.delete-event', function (e) {
     e.preventDefault();
     let eventItem = $(this).closest('.dropdown-item');

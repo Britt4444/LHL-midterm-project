@@ -1,5 +1,5 @@
 const db = require('../connection');
-//changed query to be able to display favourite red heart on first load, joined 2 tables
+
 // Return all events
 const getEvents = (userId) => {
   if (userId) {
