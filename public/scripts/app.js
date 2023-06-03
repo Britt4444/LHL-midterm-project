@@ -2,7 +2,6 @@
 //global object to store created marker, needed for deleting events from map
 const markers = {};
 
-
 //return user id number from cookies to make userId dynamic, MOVED HERE TO BE AVAILABLE GLOBALLY
 const getCookie = (cname) => {
   let name = cname + "=";
@@ -601,7 +600,6 @@ $(document).ready(() => {
   });
   //  addCreatedEventToList();
 });
-
 
 
 
